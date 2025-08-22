@@ -65,7 +65,7 @@ def find_and_remove_task(task_name: str) -> bool:
 # Bubbletea chatbot with enhanced UI components
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    """Main chat endpoint with Bubbletea integration"""
+    """Main chat endpoint without Bubbletea components"""
     try:
         # Get AI interpretation
         ai_response = await ai_agent.interpret_command(request.message)
@@ -75,34 +75,30 @@ async def chat(request: ChatRequest):
         # Create a response message
         if action == "add" and task_content:
             task = create_task(task_content)
-            message = f"✅ Added: {task.content}"
-            return bt.Text(message)  # Use Bubbletea's Text component for response
+            return f"✅ Added: {task.content}"
 
         elif action == "remove" and task_content:
             removed = find_and_remove_task(task_content)
-            message = f"✅ Removed: {task_content}" if removed else f"❌ Not found: {task_content}"
-            return bt.Text(message)
+            return f"✅ Removed: {task_content}" if removed else f"❌ Not found: {task_content}"
 
         elif action == "show":
             if tasks:
                 task_list = "\n".join([f"• {task.content}" for task in tasks])
-                message = f"📋 Tasks ({len(tasks)}):\n{task_list}"
+                return f"📋 Tasks ({len(tasks)}):\n{task_list}"
             else:
-                message = "📋 No tasks found"
-            return bt.Markdown(f"**Task List**\n{message}")  # Using Markdown for better formatting
+                return "📋 No tasks found"
 
         elif action == "clear":
             count = len(tasks)
             tasks.clear()
-            message = f"🗑️ Cleared {count} tasks"
-            return bt.Text(message)
+            return f"🗑️ Cleared {count} tasks"
 
         else:
-            message = "❓ Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"
-            return bt.Error(title="Invalid Command", description=message, code="ERR_INVALID_COMMAND")  # Show an error message
+            return "❓ Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"
 
     except Exception as e:
-        return bt.Error(title="Error", description=str(e), code="ERR_INTERNAL_SERVER")
+        return f"⚠️ Error: {str(e)}"
+
 
 @app.get("/health")
 async def health():
