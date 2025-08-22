@@ -8,6 +8,7 @@ from ai_agent import AIAgent
 from config import Config
 from datetime import datetime
 import uuid
+import bubbletea_chat as bt  # Importing Bubbletea
 
 app = FastAPI()
 
@@ -61,43 +62,47 @@ def find_and_remove_task(task_name: str) -> bool:
             return True
     return False
 
+# Bubbletea chatbot with enhanced UI components
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    """Main chat endpoint"""
+    """Main chat endpoint with Bubbletea integration"""
     try:
         # Get AI interpretation
         ai_response = await ai_agent.interpret_command(request.message)
         action = ai_response.get("action", "unknown")
         task_content = ai_response.get("task")
 
-        # Execute action
+        # Create a response message
         if action == "add" and task_content:
             task = create_task(task_content)
             message = f"✅ Added: {task.content}"
+            return bt.Text(message)  # Use Bubbletea's Text component for response
+
         elif action == "remove" and task_content:
             removed = find_and_remove_task(task_content)
             message = f"✅ Removed: {task_content}" if removed else f"❌ Not found: {task_content}"
+            return bt.Text(message)
+
         elif action == "show":
             if tasks:
                 task_list = "\n".join([f"• {task.content}" for task in tasks])
                 message = f"📋 Tasks ({len(tasks)}):\n{task_list}"
             else:
                 message = "📋 No tasks found"
+            return bt.Markdown(f"**Task List**\n{message}")  # Using Markdown for better formatting
+
         elif action == "clear":
             count = len(tasks)
             tasks.clear()
             message = f"🗑️ Cleared {count} tasks"
+            return bt.Text(message)
+
         else:
             message = "❓ Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"
-
-        return {
-            "response": message,
-            "action": action,
-            "tasks": [{"id": t.id, "content": t.content, "created_at": t.created_at} for t in tasks]
-        }
+            return bt.Error(title="Invalid Command", description=message, code="ERR_INVALID_COMMAND")  # Show an error message
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return bt.Error(title="Error", description=str(e), code="ERR_INTERNAL_SERVER")
 
 @app.get("/health")
 async def health():
