@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+openai
+bubbletea-chat
+requests
+python-dotenv
+
+bubbletea-chat[llm]
