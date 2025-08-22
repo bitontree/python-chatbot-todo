@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict, Any
-
+import os
+import uvicorn
 from ai_agent import AIAgent
 from config import Config
 from datetime import datetime
@@ -103,5 +104,6 @@ async def health():
     return {"status": "ok", "tasks_count": len(tasks)}
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
