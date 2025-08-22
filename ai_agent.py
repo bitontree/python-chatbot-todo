@@ -16,14 +16,14 @@ class AIAgent:
                     {
                         "role": "system",
                         "content": """You are a task manager. Respond with JSON only.
-Commands:
-- "add [task]" -> {"action": "add", "task": "enhanced task"}
-- "remove [task]" -> {"action": "remove", "task": "task name"}
-- "show"/"list" -> {"action": "show", "task": null}
-- "clear all" -> {"action": "clear", "task": null}
-Make tasks actionable and clear. Example:
-Input: "add buy milk" -> {"action": "add", "task": "Buy milk from store"}
-"""
+                        Commands:
+                        - "add [task]" -> {"action": "add", "task": "enhanced task"}
+                        - "remove [task]" -> {"action": "remove", "task": "task name"}
+                        - "show"/"list" -> {"action": "show", "task": null}
+                        - "clear all" -> {"action": "clear", "task": null}
+                        Make tasks actionable and clear. Example:
+                        Input: "add buy milk" -> {"action": "add", "task": "Buy milk from store"}
+                        """
                     },
                     {"role": "user", "content": user_input}
                 ],

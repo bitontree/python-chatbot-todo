@@ -3,4 +3,3 @@ uvicorn
 openai
 requests
 python-dotenv
-bubbletea-chat[llm]

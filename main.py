@@ -8,14 +8,13 @@ from ai_agent import AIAgent
 from config import Config
 from datetime import datetime
 import uuid
-import bubbletea_chat as bt  # Importing Bubbletea
 
 app = FastAPI()
 
-# Add CORS middleware - THIS IS THE KEY FIX
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your domain instead of "*"
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,10 +61,10 @@ def find_and_remove_task(task_name: str) -> bool:
             return True
     return False
 
-# Bubbletea chatbot with enhanced UI components
+# Chatbot endpoint
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    """Main chat endpoint without Bubbletea components"""
+    """Main chat endpoint"""
     try:
         # Get AI interpretation
         ai_response = await ai_agent.interpret_command(request.message)
