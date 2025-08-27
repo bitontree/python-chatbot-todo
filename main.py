@@ -64,31 +64,32 @@ def find_and_remove_task(task_name: str) -> bool:
 # Helper function to handle OpenAI API failures and fallback
 async def handle_openai_failure(message: str) -> Dict[str, Any]:
     """Fallback if OpenAI fails, process commands manually."""
-    # If OpenAI API fails, simulate the manual task processing
-    if "add" in message.lower():
-        task_content = message.lower().replace("add", "").strip()
+    message_lower = message.lower().strip()
+
+    if message_lower.startswith("add"):
+        task_content = message_lower.replace("add", "", 1).strip()
         if task_content:
             task = create_task(task_content)
             return f"✅ Added: {task.content}"
         else:
-            return {"action": "error", "task": None, "error": "No task content provided."}
-    
-    elif "remove" in message.lower():
-        task_name = message.lower().replace("remove", "").strip()
+            return "📋 No tasks content provided"
+
+    elif message_lower.startswith("remove"):
+        task_name = message_lower.replace("remove", "", 1).strip()
         if task_name:
             removed = find_and_remove_task(task_name)
-            return f"✅ Removed: {task_content}" if removed else f"❌ Not found: {task_content}"
+            return f"✅ Removed: {task_name}" if removed else f"❌ Not found: {task_name}"
         else:
-            return f"No task name provided."
-    
-    elif "show" in message.lower() or "list" in message.lower():
+            return "❌ No task name provided."
+
+    elif "show" in message_lower or "list" in message_lower:
         if tasks:
             task_list = "\n".join([f"• {task.content}" for task in tasks])
             return f"📋 Tasks ({len(tasks)}):\n{task_list}"
         else:
             return "📋 No tasks found"
 
-    elif "clear" in message.lower():
+    elif "clear" in message_lower:
         count = len(tasks)
         tasks.clear()
         return f"🗑️ Cleared {count} tasks"
