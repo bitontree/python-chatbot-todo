@@ -8,13 +8,13 @@ from ai_agent import AIAgent
 from config import Config
 from datetime import datetime
 import uuid
+import openai
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,17 +61,58 @@ def find_and_remove_task(task_name: str) -> bool:
             return True
     return False
 
+# Helper function to handle OpenAI API failures and fallback
+async def handle_openai_failure(message: str) -> Dict[str, Any]:
+    """Fallback if OpenAI fails, process commands manually."""
+    # If OpenAI API fails, simulate the manual task processing
+    if "add" in message.lower():
+        task_content = message.lower().replace("add", "").strip()
+        if task_content:
+            task = create_task(task_content)
+            return {"action": "add", "task": task.content}
+        else:
+            return {"action": "error", "task": None, "error": "No task content provided."}
+    
+    elif "remove" in message.lower():
+        task_name = message.lower().replace("remove", "").strip()
+        if task_name:
+            removed = find_and_remove_task(task_name)
+            return {"action": "remove", "task": task_name if removed else None}
+        else:
+            return {"action": "error", "task": None, "error": "No task name provided."}
+    
+    elif "show" in message.lower() or "list" in message.lower():
+        if tasks:
+            task_list = "\n".join([f"• {task.content}" for task in tasks])
+            return {"action": "show", "task": task_list}
+        else:
+            return {"action": "show", "task": "No tasks found."}
+
+    elif "clear all" in message.lower():
+        count = len(tasks)
+        tasks.clear()
+        return {"action": "clear", "task": f"Cleared {count} tasks."}
+
+    else:
+        return {"action": "error", "task": None, "error": "Invalid command. Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"}
+
 # Chatbot endpoint
 @app.post("/chat")
 async def chat(request: ChatRequest):
     """Main chat endpoint"""
     try:
-        # Get AI interpretation
+        # Try to get AI interpretation
         ai_response = await ai_agent.interpret_command(request.message)
+        
         action = ai_response.get("action", "unknown")
         task_content = ai_response.get("task")
 
-        # Create a response message
+        if "error" in ai_response:
+            error_message = ai_response["error"]
+            # Manually handle the error and process task commands locally if OpenAI fails
+            return await handle_openai_failure(request.message)
+        
+        # Normal processing if OpenAI returns a valid action
         if action == "add" and task_content:
             task = create_task(task_content)
             return f"✅ Added: {task.content}"
@@ -96,14 +137,13 @@ async def chat(request: ChatRequest):
             return "❓ Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"
 
     except Exception as e:
-        return f"⚠️ Error: {str(e)}"
-
+        # Catch all unexpected errors
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "tasks_count": len(tasks)}
 
 if __name__ == "__main__":
-    
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
