@@ -69,7 +69,7 @@ async def handle_openai_failure(message: str) -> Dict[str, Any]:
         task_content = message.lower().replace("add", "").strip()
         if task_content:
             task = create_task(task_content)
-            return {"action": "add", "task": task.content}
+            return f"✅ Added: {task.content}"
         else:
             return {"action": "error", "task": None, "error": "No task content provided."}
     
@@ -77,24 +77,24 @@ async def handle_openai_failure(message: str) -> Dict[str, Any]:
         task_name = message.lower().replace("remove", "").strip()
         if task_name:
             removed = find_and_remove_task(task_name)
-            return {"action": "remove", "task": task_name if removed else None}
+            return f"✅ Removed: {task_content}" if removed else f"❌ Not found: {task_content}"
         else:
-            return {"action": "error", "task": None, "error": "No task name provided."}
+            return f"No task name provided."
     
     elif "show" in message.lower() or "list" in message.lower():
         if tasks:
             task_list = "\n".join([f"• {task.content}" for task in tasks])
-            return {"action": "show", "task": task_list}
+            return f"📋 Tasks ({len(tasks)}):\n{task_list}"
         else:
-            return {"action": "show", "task": "No tasks found."}
+            return "📋 No tasks found"
 
-    elif "clear all" in message.lower():
+    elif "clear" in message.lower():
         count = len(tasks)
         tasks.clear()
-        return {"action": "clear", "task": f"Cleared {count} tasks."}
+        return f"🗑️ Cleared {count} tasks"
 
     else:
-        return {"action": "error", "task": None, "error": "Invalid command. Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"}
+        return "❓ Try: 'add [task]', 'show tasks', 'remove [task]', or 'clear all'"
 
 # Chatbot endpoint
 @app.post("/chat")
